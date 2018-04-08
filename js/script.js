@@ -187,34 +187,37 @@ $(document).ready(function() {
     $(".field").click(function(){
         button_press ++;
         if (button_press == round){
+            console.log("checking sequence at value of button_press and round:");
+            console.log(button_press);
+            console.log(round);
             setTimeout(checkSequence, 200);
         }
         
     });
     
     $(".blue").click(function(){
-        play("blue", 200);
+        play("blue", 300);
         playerSequence.push("blue");
         console.log(playerSequence);
 
     });
     
     $(".green").click(function(){
-        play("green", 200);
+        play("green", 300);
         playerSequence.push("green");
         console.log(playerSequence);
 
     });
     
     $(".yellow").click(function(){
-        play("yellow", 200);
+        play("yellow", 300);
         playerSequence.push("yellow");
         console.log(playerSequence);
 
     });
     
     $(".red").click(function(){
-      play("red", 200);
+      play("red", 300);
       playerSequence.push("red");
       console.log(playerSequence);
 
