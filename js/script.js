@@ -23,7 +23,7 @@ $(document).ready(function() {
         soundRed.type = "triangle";
         soundRed.start();
     var errorSound = audioCtx.createOscillator();
-        errorSound.frequency.value = 440;
+        errorSound.frequency.value = 210;
         errorSound.type = "triangle";
         errorSound.start();
 
@@ -35,6 +35,20 @@ $(document).ready(function() {
         error: errorSound
     };
 
+    var startSequence = {
+        1: "green",
+        2: "red",
+        3: "yellow",
+        4: "blue"
+    }
+
+    var endSequence = {
+        1: "blue",
+        2: "yellow",
+        3: "red",
+        4: "green"
+    }
+
     //Setting the sound sequence for 20 moves
         var counter = 0;
     
@@ -43,15 +57,28 @@ $(document).ready(function() {
         var playerSequence = []; //sequence introduced by the player
 
         var button_press = 0; //keeps track of how many times the player pressed a button
+
+        var strict = 0; //strict mode is off at the beginning
+
+        var start = 0; //indicates whether user started the game or just wants to try the keys, if start = 0 the sequence will not be checked
     
-        var colors = ["green", "red", "yellow", "blue"];
+        var reset = 0; //variable used to give the start button also a reset function
+
+        var sequenceNotPlaying = 1; //variable used to prevent button presses when the computer plays the sequence
         
-        for(i = 1; i < 21; i++){
-            combination[i] = colors[Math.floor(Math.random() * 4)];
+        var colors = ["green", "red", "yellow", "blue"];
+
+        var generateCombination = function(){
+            for(i = 1; i < 21; i++){
+                combination[i] = colors[Math.floor(Math.random() * 4)];
+            }
         }
-        console.log(combination);
+        
+        generateCombination();
     
         var round = 0;
+
+        var on = 0;
 
     
     var updateCounter = function(){
@@ -61,20 +88,54 @@ $(document).ready(function() {
             $(".screen").html(counter);
         }
     }
+
+    var resetCounter = function(){
+        counter = 0;
+        $(".screen").html("0"+counter);
+    }
+
+    var switchOffCounter = function(){
+        counter = 0;
+        $(".screen").html("");
+        $(".screen").toggleClass("screen__off");
+    }
     
     
     var error = function(){
+        //player should not be able to play tones at this time
+        sequenceNotPlaying = 0;
         //activate error sound  
         errorSound.connect(audioCtx.destination);
         setTimeout(function() { 
             errorSound.disconnect(audioCtx.destination);  
-          }, 1000); 
-        playerSequence = [];   
-        button_press = 0;
+          }, 1000);
+          
+        if (strict == 1){
+            playerSequence = [];   
+            button_press = 0;
+            resetCounter();
+            round = 0;
+            sequenceNotPlaying = 1;
+            $(".start__label").html("start");
+            reset = 0;
+            start = 0;
+        } else {
+            playerSequence = [];   
+            button_press = 0;
+            resetCounter();
+            setTimeout(function() {
+                round--; 
+                playSequence(combination, round);
+              }, 1500);
+            
+        }
+        
     }
     
 
     var play = function(color, duration){
+
+        
         var activeClass = color+"__active";
         var selector = "."+color;
 
@@ -87,146 +148,198 @@ $(document).ready(function() {
         sound[color].connect(audioCtx.destination);
         $(selector).addClass(activeClass);
 
-        counter ++;
-        updateCounter();
-
     }
 
 
-    var i = 1;
+var tone = 1;
 
-    var playSequence = function() {
-    //Duration changes depending on the round - like in the real game 
-    console.log("this is round:");
-    console.log(round);
-        if (round < 6){
-            duration = 420;
-        } else if (round < 13){
-            duration = 320;
-        } else {
-            duration = 220;
-        }
+var playSequence = function(comb, times) {
+        
+    playerSequence = [];
+    button_press = 0;
+    sequenceNotPlaying = 0;
+    //DURATION changes depending on the round - like in the real game 
 
-        setTimeout(function () {    
+            if (round < 6){
+                duration = 420;
+            } else if (round < 13){
+                duration = 320;
+            } else {
+                duration = 220;
+            }
+            if(comb == startSequence || comb == endSequence){
+                duration = 100;
+            }
+
+    setTimeout(function () {    
+       
+       var sound = comb[tone];
+       
+       play(sound, duration);
+
+       if(comb != startSequence && comb != endSequence){
+        counter ++;
+        updateCounter();
+       }
+        
+                          
+       if (times--) {            
+          playSequence(comb, times);
+
+          tone++;               
+       } else {
+           tone = 1;
+
+           if (round <= 20 && comb != startSequence && comb != endSequence){
+                round += 1;
+            } else {
+                round = 0;
+            }
+           sequenceNotPlaying = 1;
            
-           var sound = combination[i];
-           console.log(combination[i]);
-           
-           play(sound, duration);
-            
-                              
-           if (i < round+1) {            
-              playSequence();
-              i++;               
-           } else {
-               i = 1;
-               console.log("finished all sounds");
-               if (round <= 20){
-                    round += 1;
-                } else {
-                    round = 1;
-                }
-               console.log("it is round:");
-               console.log(round);
-           }                       
-        }, duration + 200)
+       }                       
+    }, duration + 200)
 
-     }
-    
-
+ }
     
     $(".start__button").click(function(){
-        counter = 0;
-        
-        playSequence();
 
-    //Computer playing sounds in sequence
-            
+
+        if((on == 1) && (reset == 0)){
+            start = 1;
+            resetCounter();
+            // playSequence();
+            playSequence(combination, round); 
+            $(".start__label").html("reset");
+            reset = 1;
+        } else if((reset == 1) && (start == 1)){
+                $(".start__label").html("start");
+                reset = 0;
+                start = 0;
+                generateCombination(); 
+                playerSequence = [];   
+                button_press = 0;
+                resetCounter();
+                round = 0;
+        } else {} 
+
+
+    
+      
     });
     
 
     //PLAYER'S TURN:
-    
+    var checkSound = function(sound){
+        if (sound != combination[button_press]){
 
-    var checkSequence = function(){
+            error();
+        }
+    }
+
+    var checkSequence = function(sequence){
+
         var mistake = 0;
         for (var m = 1; m <= round; m++){
-            if (playerSequence[m-1] != combination[m]){
-                console.log("you made and error, these are not the same:");
-                console.log(playerSequence[m-1]);
-                console.log(combination[m]);
-                console.log("The value of m and m-1 is:")
-                console.log(m);
-                console.log(m-1);
+            if (sequence[m-1] != combination[m]){
                 mistake = 1;
                 error();
             } else if(m == round && mistake == 0){
-                console.log("Correct! They are the same:");
-                console.log(playerSequence[m-1]);
-                console.log(combination[m]);
-                console.log("The value of m and m-1 is:")
-                console.log(m);
-                console.log(m-1);
+                setTimeout(function(){
+                    resetCounter();
+                    playSequence(combination, round)
+                }, 1000);
 
-                setTimeout(playSequence, 2000);
-                playerSequence = [];
-                button_press = 0;
             } else{
-                console.log("checking");
             }
         }
         
 
     }
 
-
-
-
     //When the player pushes the buttons:
-    
+
+
     $(".field").click(function(){
-        button_press ++;
-        if (button_press == round){
-            console.log("checking sequence at value of button_press and round:");
-            console.log(button_press);
-            console.log(round);
-            setTimeout(checkSequence, 200);
-        }
+        if((on == 1) && (sequenceNotPlaying == 1)){
+
+            if ($(this).hasClass("blue") && $(".blue").hasClass("on")){
+
+                playerSequence.push("blue");
+                play("blue", 300);
+            } else if ($(this).hasClass("green") && $(this).hasClass("on")){
+                playerSequence.push("green");
+                play("green", 300);
+            } else if ($(this).hasClass("yellow") && $(this).hasClass("on")){
+                playerSequence.push("yellow");
+                play("yellow", 300);
+            } else if ($(this).hasClass("red") && $(this).hasClass("on")){
+                playerSequence.push("red");
+                play("red", 300);
+            } else {}
+
+
+            if(start == 1){
+                if (button_press == 0){
+                    resetCounter();
+                }
+                button_press ++;
+                counter ++;
+                updateCounter();
+                setTimeout(checkSound(playerSequence[button_press-1]), 500);
+            
+                if (button_press == round){
+                    sequenceNotPlaying = 0;
+                    setTimeout(checkSequence(playerSequence), 500);
+                }
+            }
+            
+        } else {}
         
-    });
-    
-    $(".blue").click(function(){
-        play("blue", 300);
-        playerSequence.push("blue");
-        console.log(playerSequence);
-
-    });
-    
-    $(".green").click(function(){
-        play("green", 300);
-        playerSequence.push("green");
-        console.log(playerSequence);
-
-    });
-    
-    $(".yellow").click(function(){
-        play("yellow", 300);
-        playerSequence.push("yellow");
-        console.log(playerSequence);
-
-    });
-    
-    $(".red").click(function(){
-      play("red", 300);
-      playerSequence.push("red");
-      console.log(playerSequence);
-
-    });
+          
+          
+      });
 
 
     //toggle the ON / OFF button
     $(".slider").click(function(){
-        $(".slider__button").toggleClass("on");
+
+        if (on == 0){
+            generateCombination();
+            $(".slider__button").toggleClass("on");
+            $(".screen").toggleClass("screen__off");
+            $(".field").toggleClass("on");
+            playSequence(startSequence, 3);
+            on = 1;
+            resetCounter();
+            
+        } else {
+            $(".slider__button").toggleClass("on");
+            $(".start__label").html("start");
+            playSequence(endSequence, 3);
+            on = 0;
+            setTimeout(switchOffCounter, 2000);
+            $(".field").toggleClass("on");
+            if($(".strict__light").hasClass("light__active")){
+                $(".strict__light").removeClass("light__active");
+                strict = 0;
+            }
+            
+            
+        }
+    });
+
+    $(".strict__button").click(function(){
+        if(on == 1){
+            if(strict == 0){
+                $(".strict__light").toggleClass("light__active");
+                strict = 1;
+            } else {
+                $(".strict__light").toggleClass("light__active");
+                strict = 0;
+            }
+            
+        } 
     });
     
     
