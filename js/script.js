@@ -192,7 +192,7 @@ var playSequence = function(comb, times) {
 
            if (round <= 20 && comb != startSequence && comb != endSequence){
                 round += 1;
-            } else {
+            } else{
                 round = 0;
             }
            sequenceNotPlaying = 1;
@@ -244,14 +244,18 @@ var playSequence = function(comb, times) {
             if (sequence[m-1] != combination[m]){
                 mistake = 1;
                 error();
+            
+//VICTORY! THE PLAYER WINS!
+            } else if((m == 20 && mistake == 0)){
+                $(".announcement").css("opacity", "1");
+                playSequence(endSequence, 3);
+
             } else if(m == round && mistake == 0){
                 setTimeout(function(){
                     resetCounter();
                     playSequence(combination, round)
                 }, 1000);
-
-            } else{
-            }
+            }else{}
         }
         
 

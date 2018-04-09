@@ -42,6 +42,15 @@ body{
   }
   
   
+  .announcement {
+    position: absolute;
+    top: 2rem;
+    left: 7rem;
+    font-size: 3rem;
+    color: #336699;
+    opacity: 0;
+    font-family: sans-serif;
+}
   
   .field{
     border: 5px solid black;

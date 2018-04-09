@@ -34,6 +34,15 @@ body {
   align-items: center;
   grid-template-areas: "logo logo logo" "counter start strict" "power power power"; }
 
+.announcement {
+  position: absolute;
+  top: 2rem;
+  left: 7rem;
+  font-size: 3rem;
+  color: #336699;
+  opacity: 0;
+  font-family: sans-serif; }
+
 .field {
   border: 5px solid black;
   height: 15rem;
